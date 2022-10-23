@@ -1,4 +1,5 @@
 %token LPAREN RPAREN
+%token EOL
 %token <int> INT
 %token <float> FLOAT
 %token PLUS PLUSF MINUS MINUSF TIMES TIMESF DIV MOD
@@ -9,7 +10,7 @@
 %type <Asyntax.sexp> parse
 %%
 parse:  
-  sexp   { $1 }
+  sexp EOL  { $1 }
 ;
 sexp:
   INT  { Asyntax.Atom(Int($1))}
