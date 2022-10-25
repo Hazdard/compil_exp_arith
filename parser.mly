@@ -9,28 +9,22 @@
 %type <Asyntax.sexp> parse
 %%
 parse:  
-  sexp EOL  { $1 }
+  bob EOL  { $1 }
 ;
-sexp:
+bob:
   INT  { Asyntax.Atom(Int($1))}
 | FLOAT { Asyntax.Atom(Float($1))}
-| TOFLOAT LPAREN sexp RPAREN { Asyntax.Tofloat ($3) }
-| TOINT LPAREN sexp RPAREN { Asyntax.Toint ($3) }
-| LPAREN sexp RPAREN { $2 }
-| sexp PLUS sexp { Asyntax.Cons (Plus,$1,$3) }
-| sexp PLUSF sexp { Asyntax.Cons (Plusf,$1,$3) }
-| sexp MINUS sexp { Asyntax.Cons (Moins,$1,$3) }
-| sexp MINUSF sexp { Asyntax.Cons (Moinsf,$1,$3) }
-| sexp TIMES sexp { Asyntax.Cons (Prod,$1,$3) }
-| sexp TIMESF sexp { Asyntax.Cons (Prodf,$1,$3) }
-| sexp DIV sexp { Asyntax.Cons (Div,$1,$3) }
-| sexp MOD sexp { Asyntax.Cons (Mod,$1,$3) }
-| MINUS LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) }
-| MINUSF LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Float(0.)),$3) }
-| MINUS INT { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),Asyntax.Atom(Int($2))) }
-| MINUSF FLOAT { Asyntax.Cons (Moins,Asyntax.Atom(Float(0.)),Asyntax.Atom(Float($2))) }
-| PLUS LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) }
-| PLUSF LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Float(0.)),$3) }
-| PLUS INT { Asyntax.Atom(Int($2)) }
-| PLUSF FLOAT {Asyntax.Atom(Float($2)) }
+| TOFLOAT LPAREN bob RPAREN { Asyntax.Tofloat ($3) }
+| TOINT LPAREN bob RPAREN { Asyntax.Toint ($3) }
+| LPAREN bob RPAREN { $2 }
+| bob PLUS bob { Asyntax.Cons (Plus,$1,$3) }
+| bob PLUSF bob { Asyntax.Cons (Plusf,$1,$3) }
+| bob MINUS bob { Asyntax.Cons (Moins,$1,$3) }
+| bob MINUSF bob { Asyntax.Cons (Moinsf,$1,$3) }
+| bob TIMES bob { Asyntax.Cons (Prod,$1,$3) }
+| bob TIMESF bob { Asyntax.Cons (Prodf,$1,$3) }
+| bob DIV bob { Asyntax.Cons (Div,$1,$3) }
+| bob MOD bob { Asyntax.Cons (Mod,$1,$3) }
+| MINUS LPAREN bob RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) } (* reparer ce putin de cas si cest entier *)
+| PLUS LPAREN bob RPAREN { $3 }
 ;
