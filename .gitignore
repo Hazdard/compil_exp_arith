@@ -4,5 +4,5 @@ lexer.ml
 main
 parser.mli
 parser.ml
-test.s
-test.exp
+*.s
+*.exp
