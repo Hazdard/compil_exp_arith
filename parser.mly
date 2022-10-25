@@ -25,6 +25,6 @@ bob:
 | bob TIMESF bob { Asyntax.Cons (Prodf,$1,$3) }
 | bob DIV bob { Asyntax.Cons (Div,$1,$3) }
 | bob MOD bob { Asyntax.Cons (Mod,$1,$3) }
-| MINUS LPAREN bob RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) } (* reparer ce putin de cas si cest entier *)
+| MINUS LPAREN bob RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) }
 | PLUS LPAREN bob RPAREN { $3 }
 ;
