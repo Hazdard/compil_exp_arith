@@ -25,7 +25,7 @@ sexp:
 | sexp TIMESF sexp { Asyntax.Cons (Prodf,$1,$3) }
 | sexp DIV sexp { Asyntax.Cons (Div,$1,$3) }
 | sexp MOD sexp { Asyntax.Cons (Mod,$1,$3) }
-| MINUS LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) }*
+| MINUS LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) }
 | MINUSF LPAREN sexp RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Float(0.)),$3) }
 | MINUS INT { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),Asyntax.Atom(Int($2))) }
 | MINUSF FLOAT { Asyntax.Cons (Moins,Asyntax.Atom(Float(0.)),Asyntax.Atom(Float($2))) }

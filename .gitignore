@@ -1,7 +1,2 @@
-OLD_comp_exp_arith/
-
-projet_prog_comp_arith/ilisp-v1/
-tds/
-
-tds/td4-prog/
-projet_prog_comp_arith/compil_exp_arith-master/test.s
+*.cmi
+*.cmo
