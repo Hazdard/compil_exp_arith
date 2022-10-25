@@ -34,15 +34,6 @@ let _ =
       | Asyntax.Atom (Int ent) -> ("pushq $" ^ string_of_int ent) ^ "\n"
     in
     write_in "retour.s"
-      (".global main \n \nmain : \n" ^ aux ast
-     ^ "movq $message, %rdi \n\
-       \ popq %rsi \n\
-       \ movq $0, %rax \n\
-       \ call printf \n\
-       \ ret \n\
-       \ \n\
-       \ .data \n\
-       \ message: \n\
-       \ .string \"%d \\n\"")
+      ((".global main \n \nmain : \n" ^aux ast)^"movq $message, %rdi \npopq %rsi \nmovq $0, %rax \ncall printf \nret \n \n.data \nmessage: \n.string \"%d \\n\"")
 (* METTRE RAX A 0 juste avant de call printf *)
 (* https://stackoverflow.com/questions/10161911/push-xmm-register-to-the-stack *)
