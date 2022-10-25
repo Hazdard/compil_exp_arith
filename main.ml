@@ -9,7 +9,7 @@ let _ =
   let lexbuf = Lexing.from_channel (open_in Sys.argv.(1)) in (* Mettre stdin pour lire directement le texte ecrit dans la console *)
   let ast = Parser.parse Lexer.token lexbuf in
   if not (Asyntax.bien_typee ast) then failwith "Erreur de typage"
-  (* else Asyntax.afficher_sexp ast; print_string "\n"*)
+  else Asyntax.afficher_sexp ast; print_string "\n"
 (*else let rec aux = function 
   |Asyntax.Cons(Plus,s1,s2) ->((aux s1)^(aux s2))^("")
   |Asyntax.Cons(Moins,s1,s2) ->((aux s1)^(aux s2))^("")
@@ -32,6 +32,3 @@ let write_in file str =
   output_string out_channel str
 
   *)
-
-open Lexer 
-
