@@ -1,3 +1,4 @@
+*.c
 *.cmi
 *.cmo
 lexer.ml
@@ -7,4 +8,5 @@ parser.ml
 *.s
 *.exp
 retour
-afficheur
+afficheur 
+*exe
