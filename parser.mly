@@ -27,4 +27,9 @@ bob:
 | bob MOD bob { Asyntax.Cons (Mod,$1,$3) }
 | MINUS LPAREN bob RPAREN { Asyntax.Unaire (Moinsu,$3) }
 | PLUS LPAREN bob RPAREN { $3 }
+| MINUS INT { Asyntax.Unaire (Moinsu,Asyntax.Atom(Int($2))) }
+| MINUS FLOAT { Asyntax.Unaire (Moinsu,Asyntax.Atom(Float($2))) }
+| MINUS LPAREN bob RPAREN { Asyntax.Unaire (Moinsu,$3) }
+| PLUS INT { Asyntax.Atom(Int($2)) }
+| PLUS FLOAT { Asyntax.Atom(Float($2)) }
 ;
