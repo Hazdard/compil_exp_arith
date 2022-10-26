@@ -14,8 +14,8 @@ parse:
 bob:
   INT  { Asyntax.Atom(Int($1))}
 | FLOAT { Asyntax.Atom(Float($1))}
-| TOFLOAT LPAREN bob RPAREN { Asyntax.Tofloat ($3) }
-| TOINT LPAREN bob RPAREN { Asyntax.Toint ($3) }
+| TOFLOAT LPAREN bob RPAREN { Asyntax.Unaire (Tofloat,$3) }
+| TOINT LPAREN bob RPAREN { Asyntax.Unaire (Toint,$3) }
 | LPAREN bob RPAREN { $2 }
 | bob PLUS bob { Asyntax.Cons (Plus,$1,$3) }
 | bob PLUSF bob { Asyntax.Cons (Plusf,$1,$3) }
@@ -25,6 +25,6 @@ bob:
 | bob TIMESF bob { Asyntax.Cons (Prodf,$1,$3) }
 | bob DIV bob { Asyntax.Cons (Div,$1,$3) }
 | bob MOD bob { Asyntax.Cons (Mod,$1,$3) }
-| MINUS LPAREN bob RPAREN { Asyntax.Cons (Moins,Asyntax.Atom(Int(0)),$3) }
+| MINUS LPAREN bob RPAREN { Asyntax.Unaire (Moinsu,$3) }
 | PLUS LPAREN bob RPAREN { $3 }
 ;

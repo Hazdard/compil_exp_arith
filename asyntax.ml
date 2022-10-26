@@ -1,21 +1,24 @@
 exception Error of string
 
-type noeud = Plus | Moins | Prod | Plusf | Moinsf | Prodf | Div | Mod
+type noeud_bin = Plus | Moins | Prod | Plusf | Moinsf | Prodf | Div | Mod
+type noeud_una = Toint | Tofloat | Moinsu
 type feuille = Int of int | Float of float
 
 type sexp =
   | Atom of feuille
-  | Cons of noeud * sexp * sexp
-  | Toint of sexp
-  | Tofloat of sexp
-  (*Correction : enelever Toint Tofloat et les remplacer par un sexp Unaire of sexp ;; et rajouter Toint et Tofloat dans les noeuds*)
+  | Cons of noeud_bin * sexp * sexp
+  | Unaire of noeud_una * sexp
 
 let rec afficher_sexp = function
-  | Toint exp ->
+  | Unaire (Toint, exp) ->
       print_string " Toint (";
       afficher_sexp exp;
       print_char ')'
-  | Tofloat exp ->
+  | Unaire (Moinsu, exp) ->
+      print_string " - (";
+      afficher_sexp exp;
+      print_char ')'
+  | Unaire (Tofloat, exp) ->
       print_string " Tofloat (";
       afficher_sexp exp;
       print_char ')'
@@ -86,15 +89,18 @@ let rec afficher_sexp = function
 
 let bien_typee ast =
   let rec aux = function
-  (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
+    (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
     | Atom (Int _) -> (true, 1)
     | Atom (Float _) -> (true, 0)
-    | Toint s1 ->
+    | Unaire (Toint, s1) ->
         let a, b = aux s1 in
         (a && b = 0, 1)
-    | Tofloat s1 ->
+    | Unaire (Tofloat, s1) ->
         let a, b = aux s1 in
         (a && b = 1, 0)
+    | Unaire (Moinsu, s1) ->
+        let a, b = aux s1 in
+        (a && b = 1, b)
     | Cons (Plus, s1, s2) ->
         let a1, b1 = aux s1 in
         let a2, b2 = aux s2 in
@@ -128,5 +134,4 @@ let bien_typee ast =
         let a2, b2 = aux s2 in
         ((a1 && a2) && b1 = b2 && b1 = 1, b1)
   in
-  let a, b = aux ast in
-  a
+  aux ast
