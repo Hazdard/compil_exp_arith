@@ -186,4 +186,4 @@ let _ =
           \ \n\
            .data \n\
            convfloat : \n\
-           .string \"%g \\n \" \n")
+           .string \"%g \\n\"\n")
