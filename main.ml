@@ -2,6 +2,7 @@ open Asyntax
 open Lexer
 open Parser
 
+(*-5496%59=50!=55*)
 let write_in file str =
   let out_channel = open_out file in
   output_string out_channel str
@@ -69,55 +70,84 @@ let _ =
       | Asyntax.Atom (Float flott) ->
           ( "movsd .F"
             ^ string_of_int (compteur + 1)
-            ^ "(%rip), %xmm0 \nmovsd %xmmo, -8(%rsp) \nsubq $8, %rsp\n",
+            ^ "(%rip), %xmm0 \nmovsd %xmm0, -8(%rsp) \nsubq $8, %rsp\n",
             (("\n.F" ^ string_of_int (compteur + 1)) ^ ":\n.double ")
             ^ string_of_float flott,
             compteur + 1 )
       | Asyntax.Unaire (Moinsu, s) ->
-          let a, b, c = aux s in
+          let a, b, c = aux (s, 0) in
           ( a
             ^ "movsd (%rsp), %xmm0 \n\
+               addq $8, %rsp \n\
                movsd .F0(%rip), %xmm1 \n\
                mulsd %xmm1, %xmm0 \n\
-               pushq %xmm0 \n",
+               movq %xmm0, -8(%rsp) \n\
+               subq $8, %rsp\n\
+              \ ",
             b,
             c )
-      (* | Asyntax.Cons (Plusf, s1, s2) -> "aled"
-         | Asyntax.Cons (Moinsf, s1, s2) -> "aled"
-         | Asyntax.Cons (Prodf, s1, s2) -> "aled"
+      | Asyntax.Cons (Plusf, s1, s2) ->
+          let a1, b1, nbf1 = aux (s1, 0) in
+          let a2, b2, nbf2 = aux (s2, nbf1) in
+          ( (a1 ^ a2)
+            ^ "movsd (%rsp), %xmm0 \n\
+               addq $8, %rsp \n\
+               movsd (%rsp), %xmm1 \n\
+               addq $8, %rsp\n\
+               addsd %xmm1, %xmm0 \n\
+               movq %xmm0, -8(%rsp) \n\
+               subq $8, %rsp\n",
+            b1 ^ b2,
+            nbf2 )
+         | Asyntax.Cons (Moinsf, s1, s2) -> let a1, b1, nbf1 = aux (s1, 0) in
+         let a2, b2, nbf2 = aux (s2, nbf1) in
+         ( (a1 ^ a2)
+           ^ "movsd (%rsp), %xmm0 \n\
+              addq $8, %rsp \n\
+              movsd (%rsp), %xmm1 \n\
+              addq $8, %rsp\n\
+              subsd %xmm0, %xmm1 \n\
+              movq %xmm1, -8(%rsp) \n\
+              subq $8, %rsp\n",
+           b1 ^ b2,
+           nbf2 )
+         (* | Asyntax.Cons (Prodf, s1, s2) -> "aled"
          | Asyntax.Unaire (Tofloat, ent) -> "aled"
          | Asyntax.Unaire (Toint, flott) -> "aled" *)
     in
     let code, var, _ = aux (ast, 0) in
     write_in "retour.s"
       (if est_entier = 1 then
-       (".global main \n \nmain : \n" ^ code)
+       ((".global main \n \nmain : \n" ^ code)
        ^ "movq $message, %rdi \n\
           popq %rsi \n\
           movq $0, %rax \n\
           call printf \n\
           ret \n\
          \ \n\
-          .string \"%d \\n\" \n\
-         \ \n\
-          F0: \n\
-          .double -1.0 \n\
-          .data \n\
-          message: \n\
-          .string \"%d \\n\""
-      else (".global main \n \nmain : \n" ^ code)
-      ^ "movq $message, %rdi \n\
-         popq %rsi \n\
-         movq $0, %rax \n\
-         call printf \n\
-         ret \n\
-        \ \n\
-         .string \"%d \\n\" \n\
-        \ \n\
-         F0: \n\
-         .double -1.0 \n\
-         .data \n\
-         message: \n\
-         .string \"%d \\n\"")
-
-(* https://stackoverflow.com/questions/10161911/push-xmm-register-to-the-stack *)
+          .F0: \n\
+          .double -1.0")
+       ^ var ^ "\n.data \nmessage: \n.string \"%d \\n\" \n"
+      else
+        (".global main \n \nmain : \n" ^ code)
+        ^ "movq (%rsp), %xmm0 \n\
+           movq $1, %rax \n\
+           addq $8, %rsp\n\
+           movq %xmm0, %rdi \n\
+           call print_float \n\
+           ret \n\
+          \ \n\
+           .F0: \n\
+           .double -1.0" ^ var
+        ^ "\n\
+          \ \n\
+           print_float : \n\
+           movq %rsp, %rbp \n\
+           movq %rdi, %xmm0 \n\
+           movl $convfloat, %edi \n\
+           movl $1, %eax \n\
+           call printf \n\
+          \ \n\
+           .data \n\
+           convfloat : \n\
+           .string \"%g \\n \" \n")
