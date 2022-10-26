@@ -1,5 +1,5 @@
 all : asyntax.cmo lexer.cmo parser.cmo main.cmo
-	ocamlc asyntax.cmo lexer.cmo parser.cmo main.cmo -o main
+	ocamlc asyntax.cmo lexer.cmo parser.cmo main.cmo -o aritha
 
 main.cmo :
 	ocamlc -c main.ml

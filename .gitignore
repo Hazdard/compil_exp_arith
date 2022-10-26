@@ -9,4 +9,6 @@ parser.ml
 *.exp
 retour
 afficheur 
-*exe
+*.exe
+test
+aritha
