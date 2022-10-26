@@ -18,7 +18,7 @@ let _ =
       match ast with
       (*Invariant : a la fin d'un appel, le resultat est seul dans la pile et la tete de la pile est au debut du resultat *)
       (*F0 est attribue a -1.0*)
-      (*aux retourne (code qui calcule, code qui defini les flottants, nombre de flottants)*)
+      (*aux retourne (code qui calcule, code qui defini les flottants, indice du dernier flottant)*)
       | Asyntax.Unaire (Moinsu, s) when snd (Asyntax.bien_typee s) = 1 ->
           let a, b, nbf = aux (s, 0) in
           ( a ^ "popq %rdi \nmovq $0, %rsi \nsubq %rdi, %rsi \npushq %rsi \n",
@@ -66,29 +66,46 @@ let _ =
             b1 ^ b2,
             nbf1 )
       | Asyntax.Atom (Int ent) -> (("pushq $" ^ string_of_int ent) ^ "\n", "", 0)
-   (*    | Asyntax.Atom (Float flott) ->
-          incr compteur;
-          data_float := "prout"
-          (* !data_float
-             ^ (("\n.F" ^ string_of_int !compteur) ^ ":\n.double ")
-             ^ string_of_float flott *);
-          "movsd .F" ^ string_of_int !compteur
-          ^ "(%rip), %xmm0 \nmovsd %xmmo, -8(%rsp) \nsubq $8, %rsp\n"
+      | Asyntax.Atom (Float flott) ->
+          ( "movsd .F"
+            ^ string_of_int (compteur + 1)
+            ^ "(%rip), %xmm0 \nmovsd %xmmo, -8(%rsp) \nsubq $8, %rsp\n",
+            (("\n.F" ^ string_of_int (compteur + 1)) ^ ":\n.double ")
+            ^ string_of_float flott,
+            compteur + 1 )
       | Asyntax.Unaire (Moinsu, s) ->
-          aux s
-          ^ "movsd (%rsp), %xmm0 \n\
-             movsd .F0(%rip), %xmm1 \n\
-             mulsd %xmm1, %xmm0 \n\
-             pushq %xmm0 \n"
-      | Asyntax.Cons (Plusf, s1, s2) -> "aled"
-      | Asyntax.Cons (Moinsf, s1, s2) -> "aled"
-      | Asyntax.Cons (Prodf, s1, s2) -> "aled"
-      | Asyntax.Unaire (Tofloat, ent) -> "aled"
-      | Asyntax.Unaire (Toint, flott) -> "aled" *)
+          let a, b, c = aux s in
+          ( a
+            ^ "movsd (%rsp), %xmm0 \n\
+               movsd .F0(%rip), %xmm1 \n\
+               mulsd %xmm1, %xmm0 \n\
+               pushq %xmm0 \n",
+            b,
+            c )
+      (* | Asyntax.Cons (Plusf, s1, s2) -> "aled"
+         | Asyntax.Cons (Moinsf, s1, s2) -> "aled"
+         | Asyntax.Cons (Prodf, s1, s2) -> "aled"
+         | Asyntax.Unaire (Tofloat, ent) -> "aled"
+         | Asyntax.Unaire (Toint, flott) -> "aled" *)
     in
     let code, var, _ = aux (ast, 0) in
     write_in "retour.s"
-      ((".global main \n \nmain : \n" ^ code)
+      (if est_entier = 1 then
+       (".global main \n \nmain : \n" ^ code)
+       ^ "movq $message, %rdi \n\
+          popq %rsi \n\
+          movq $0, %rax \n\
+          call printf \n\
+          ret \n\
+         \ \n\
+          .string \"%d \\n\" \n\
+         \ \n\
+          F0: \n\
+          .double -1.0 \n\
+          .data \n\
+          message: \n\
+          .string \"%d \\n\""
+      else (".global main \n \nmain : \n" ^ code)
       ^ "movq $message, %rdi \n\
          popq %rsi \n\
          movq $0, %rax \n\
