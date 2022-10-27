@@ -2,9 +2,8 @@ open Asyntax
 open Lexer
 open Parser
 
-
-(* CORRIGER LES IDIVQ NEGATIFS *)
-
+(* CORRIGER LES IDIVQ NEGATIFS 0xffffffffffffffff dans rdx si strictement negatif et 0 sinon*)
+(*jne : not equal ; jz : equal zero ; jnz : not equal zero *)
 
 let write_in file str =
   let out_channel = open_out file in
@@ -70,8 +69,9 @@ let _ =
           ( (a1 ^ a2)
             ^ "popq %rsi \n\
                popq %rax \n\
-               movq $0, %rdx \n\
+               movq $0xffffffffffffffff, %rdx \n\ 
                idivq %rsi \n\
+               addq %rsi, %rdx \n\
                pushq %rdx \n",
             b1 ^ b2,
             nbf1 )
