@@ -10,7 +10,7 @@ let write_in file str =
 let nom str =
   let n = String.length str in
   if n < 5 then failwith "Nom de fichier problematique"
-  else if (String.sub str (n - 4) 4) <> ".exp" then failwith "Mauvaise extension"
+  else if String.sub str (n - 4) 4 <> ".exp" then failwith "Mauvaise extension"
   else String.sub str 0 (n - 3) ^ "s"
 
 let _ =
@@ -72,7 +72,7 @@ let _ =
                pushq %rdx \n",
             b1 ^ b2,
             nbf1 )
-      | Asyntax.Atom (Int ent) -> (("pushq $" ^ string_of_int ent) ^ "\n", "", 0)
+      | Asyntax.Atom (Int ent) -> (("pushq $" ^ string_of_int ent) ^ "\n", "", compteur)
       | Asyntax.Atom (Float flott) ->
           ( "movsd .F"
             ^ string_of_int (compteur + 1)
@@ -132,7 +132,7 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Unaire (Tofloat, s) ->
-          let a, b, nbf = aux (s, 0) in
+          let a, b, nbf = aux (s, compteur) in
           ( a
             ^ "popq %rdi \n\
                cvtsi2sdq %rdi, %xmm0 \n\
@@ -141,7 +141,7 @@ let _ =
             b,
             nbf )
       | Asyntax.Unaire (Toint, s) ->
-          let a, b, nbf = aux (s, 0) in
+          let a, b, nbf = aux (s, compteur) in
           ( a
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -152,7 +152,7 @@ let _ =
     in
     let code, var, _ = aux (ast, 0) in
     write_in
-      (nom (Sys.argv.(1)))
+      (nom Sys.argv.(1))
       (if est_entier = 1 then
        ((".global main \n \nmain : \n" ^ code)
        ^ "movq $message, %rdi \n\
@@ -186,4 +186,4 @@ let _ =
           \ \n\
            .data \n\
            convfloat : \n\
-           .string \"%g \\n \" \n")
+           .string \"%g \\n\"\n")
