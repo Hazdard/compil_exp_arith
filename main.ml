@@ -10,7 +10,7 @@ let write_in file str =
 let nom str =
   let n = String.length str in
   if n < 5 then failwith "Nom de fichier problematique"
-  else if (String.sub str (n - 4) 4) <> ".exp" then failwith "Mauvaise extension"
+  else if String.sub str (n - 4) 4 <> ".exp" then failwith "Mauvaise extension"
   else String.sub str 0 (n - 3) ^ "s"
 
 let _ =
@@ -27,31 +27,31 @@ let _ =
       (*F0 est attribue a -1.0*)
       (*aux retourne (code qui calcule, code qui defini les flottants, indice du dernier flottant)*)
       | Asyntax.Unaire (Moinsu, s) when snd (Asyntax.bien_typee s) = 1 ->
-          let a, b, nbf = aux (s, 0) in
+          let a, b, nbf = aux (s, compteur) in
           ( a ^ "popq %rdi \nmovq $0, %rsi \nsubq %rdi, %rsi \npushq %rsi \n",
             b,
             nbf )
       | Asyntax.Cons (Plus, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \naddq %rdi, %rsi \npushq %rsi \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Moins, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \nsubq %rsi, %rdi \npushq %rdi \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Prod, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "popq %rsi \npopq %rdi \nimulq %rdi, %rsi \npushq %rsi \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Div, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "popq %rsi \n\
@@ -62,7 +62,7 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Mod, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "popq %rsi \n\
@@ -72,7 +72,7 @@ let _ =
                pushq %rdx \n",
             b1 ^ b2,
             nbf1 )
-      | Asyntax.Atom (Int ent) -> (("pushq $" ^ string_of_int ent) ^ "\n", "", 0)
+      | Asyntax.Atom (Int ent) -> (("pushq $" ^ string_of_int ent) ^ "\n", "", compteur)
       | Asyntax.Atom (Float flott) ->
           ( "movsd .F"
             ^ string_of_int (compteur + 1)
@@ -81,7 +81,7 @@ let _ =
             ^ string_of_float flott,
             compteur + 1 )
       | Asyntax.Unaire (Moinsu, s) ->
-          let a, b, c = aux (s, 0) in
+          let a, b, c = aux (s, compteur) in
           ( a
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -93,7 +93,7 @@ let _ =
             b,
             c )
       | Asyntax.Cons (Plusf, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "movsd (%rsp), %xmm0 \n\
@@ -106,7 +106,7 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Moinsf, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "movsd (%rsp), %xmm0 \n\
@@ -119,7 +119,7 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Prodf, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, 0) in
+          let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "movsd (%rsp), %xmm0 \n\
@@ -132,7 +132,7 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Unaire (Tofloat, s) ->
-          let a, b, nbf = aux (s, 0) in
+          let a, b, nbf = aux (s, compteur) in
           ( a
             ^ "popq %rdi \n\
                cvtsi2sdq %rdi, %xmm0 \n\
@@ -141,7 +141,7 @@ let _ =
             b,
             nbf )
       | Asyntax.Unaire (Toint, s) ->
-          let a, b, nbf = aux (s, 0) in
+          let a, b, nbf = aux (s, compteur) in
           ( a
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -152,7 +152,7 @@ let _ =
     in
     let code, var, _ = aux (ast, 0) in
     write_in
-      (nom (Sys.argv.(1)))
+      (nom Sys.argv.(1))
       (if est_entier = 1 then
        ((".global main \n \nmain : \n" ^ code)
        ^ "movq $message, %rdi \n\
