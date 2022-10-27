@@ -2,7 +2,6 @@ open Asyntax
 open Lexer
 open Parser
 
-(*-5496%59=50!=55*)
 let write_in file str =
   let out_channel = open_out file in
   output_string out_channel str
@@ -72,7 +71,8 @@ let _ =
                pushq %rdx \n",
             b1 ^ b2,
             nbf1 )
-      | Asyntax.Atom (Int ent) -> (("pushq $" ^ string_of_int ent) ^ "\n", "", compteur)
+      | Asyntax.Atom (Int ent) ->
+          (("pushq $" ^ string_of_int ent) ^ "\n", "", compteur)
       | Asyntax.Atom (Float flott) ->
           ( "movsd .F"
             ^ string_of_int (compteur + 1)
@@ -163,7 +163,7 @@ let _ =
          \ \n\
           .F0: \n\
           .double -1.0")
-       ^ var ^ "\n.data \nmessage: \n.string \"%d \\n\" \n"
+       ^ var ^ "\n \n.data \nmessage: \n.string \"%d \\n\" \n"
       else
         (".global main \n \nmain : \n" ^ code)
         ^ "movq (%rsp), %xmm0 \n\
