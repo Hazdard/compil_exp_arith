@@ -2,6 +2,10 @@ open Asyntax
 open Lexer
 open Parser
 
+
+(* CORRIGER LES IDIVQ NEGATIFS *)
+
+
 let write_in file str =
   let out_channel = open_out file in
   output_string out_channel str
