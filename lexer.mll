@@ -20,6 +20,7 @@ rule token = parse
 | '/'            { DIV }
 | '%'            { MOD }
 | '!'            { FACT }
+| '^'            { POWER }
 | '('            { LPAREN }
 | ')'            { RPAREN }
 | _              { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }

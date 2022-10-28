@@ -1,6 +1,16 @@
 exception Error of string
 
-type noeud_bin = Plus | Moins | Prod | Plusf | Moinsf | Prodf | Div | Mod
+type noeud_bin =
+  | Plus
+  | Moins
+  | Prod
+  | Plusf
+  | Moinsf
+  | Prodf
+  | Div
+  | Mod
+  | Power
+
 type noeud_una = Toint | Tofloat | Moinsu | Fact
 type feuille = Int of int | Float of float
 
@@ -23,7 +33,7 @@ let rec afficher_sexp = function
       afficher_sexp exp;
       print_char ')'
   | Unaire (Fact, exp) ->
-      print_char  '(';
+      print_char '(';
       afficher_sexp exp;
       print_string " ! ) "
   | Atom (Int ent) ->
@@ -37,6 +47,13 @@ let rec afficher_sexp = function
   | Cons (Plus, s1, s2) ->
       print_string " Cons (";
       print_string " + ,";
+      afficher_sexp s1;
+      print_string " , ";
+      afficher_sexp s2;
+      print_char ')'
+  | Cons (Power, s1, s2) ->
+      print_string " (";
+      print_string " ^ ,";
       afficher_sexp s1;
       print_string " , ";
       afficher_sexp s2;
@@ -107,7 +124,7 @@ let bien_typee ast =
         (a, b)
     | Unaire (Fact, s) ->
         let a, b = aux s in
-        (a&&(b=1), b)
+        (a && b = 1, b)
     | Cons (Plus, s1, s2) ->
         let a1, b1 = aux s1 in
         let a2, b2 = aux s2 in
@@ -117,6 +134,10 @@ let bien_typee ast =
         let a2, b2 = aux s2 in
         ((a1 && a2) && b1 = b2 && b1 = 0, b1)
     | Cons (Prod, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+    | Cons (Power, s1, s2) ->
         let a1, b1 = aux s1 in
         let a2, b2 = aux s2 in
         ((a1 && a2) && b1 = b2 && b1 = 1, b1)

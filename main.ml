@@ -2,7 +2,7 @@ open Asyntax
 open Lexer
 open Parser
 
-(* Probleme : corriger la div ; Detailler implementation puissance et fact *)
+(* FAIRE UN DOSSIER TEST ; Probleme : corriger la div ; Detailler implementation puissance et fact *)
 
 let write_in file str =
   let out_channel = open_out file in
@@ -54,6 +54,17 @@ let _ =
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
             ^ "popq %rsi \npopq %rdi \nimulq %rdi, %rsi \npushq %rsi \n",
+            b1 ^ b2,
+            nbf2 )
+      | Asyntax.Cons (Power, s1, s2) ->
+          let a1, b1, nbf1 = aux (s1, compteur) in
+          let a2, b2, nbf2 = aux (s2, nbf1) in
+          ( (a1 ^ a2)
+            ^ "popq %rsi \n\
+               popq %rdi \n\
+               movq $1, %rdx \n\
+               call puissance \n\
+               pushq %rax \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Div, s1, s2) ->
@@ -172,9 +183,9 @@ let _ =
        ret \n\
       \ \n\
        rien : \n\
-      \ \n\
        movq %rdx, %rax \n\
        ret \n\
+      \ \n\
        factorielle : \n\
        movq $2, %rcx \n\
        movq %rdi, %rdx \n\
@@ -186,6 +197,19 @@ let _ =
       \ \n\
        retour: \n\
        movq %rsi, %rax \n\
+       ret \n\
+      \ \n\
+       puissance : \n\
+       movq $1, %rcx \n\
+       movq %rsi, %r8 \n\
+       cmp %rcx, %r8 \n\
+       js retour_pui \n\
+       imulq %rdi, %rdx \n\
+       addq $-1, %rsi \n\
+       jmp puissance \n\
+      \ \n\
+       retour_pui: \n\
+       movq %rdx, %rax \n\
        ret \n\
       \ \n\
        .data \n\
