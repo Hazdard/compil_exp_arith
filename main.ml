@@ -56,11 +56,11 @@ let _ =
             ^ "popq %rsi \npopq %rax \ncqto \nidivq %rsi \npushq %rax \n",
             b1 ^ b2,
             nbf2 )
-      | Asyntax.Cons (Mod, s1, s2) -> (* si de signes differents, il faut ajouter le diviseur au reste *)
+      | Asyntax.Cons (Mod, s1, s2) ->
+          (* si de signes differents, il faut ajouter le diviseur au reste *)
           let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
-          ( (a1 ^ a2)
-            ^ "popq %rsi \npopq %rax \ncqto \nidivq %rsi \npushq %rdx \n",
+          ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \ncall modulo \npushq %rax \n",
             b1 ^ b2,
             nbf1 )
       | Asyntax.Atom (Int ent) ->
@@ -155,7 +155,27 @@ let _ =
          \ \n\
           .F0: \n\
           .double -1.0")
-       ^ var ^ "\n \n.data \nmessage: \n.string \"%d \\n\" \n"
+       ^ var
+       ^ "\n\
+         \ \n\
+          modulo : \n\
+          movq %rdi, %rax \n\
+          cqto \n\
+          idivq %rsi \n\
+          imulq %rsi, %rdi \n\
+          movq $0, %rcx \n\
+          cmp %rdi, %rcx \n\
+          js rien \n\
+          addq %rsi, %rdx \n\
+          movq %rdx, %rax \n\
+          ret \n\
+         \ \n\
+          rien : \n\
+          movq %rdx, %rax \n\
+          ret \n\
+          .data \n\
+          message: \n\
+          .string \"%d \\n\" \n"
       else
         (".global main \n \nmain : \n" ^ code)
         ^ "movq (%rsp), %xmm0 \n\
@@ -176,6 +196,21 @@ let _ =
            movl $1, %eax \n\
            call printf \n\
           \ \n\
+           modulo : \n\
+           movq %rdi, %rax \n\
+           cqto \n\
+           idivq %rsi \n\
+           imulq %rsi, %rdi \n\
+           movq $0, %rcx \n\
+           cmp %rdi, %rcx \n\
+           js rien \n\
+           addq %rsi, %rdx \n\
+           movq %rdx, %rax \n\
+           ret \n\
+          \ \n\
+           rien : \n\
+           movq %rdx, %rax \n\
+           ret \n\
            .data \n\
            convfloat : \n\
            .string \"%g \\n\"\n")
