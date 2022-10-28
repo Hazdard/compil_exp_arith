@@ -55,10 +55,10 @@ let _ =
       | Asyntax.Cons (Div, s1, s2) ->
           let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
-          ( (a1 ^ a2)
+          ( (a1 ^ a2) (*corr_div : si la value de %rax sauvee dans %rcx est negative, alors on ajoute 1*signe(%rsi) *)
             ^ "popq %rsi \n\
                popq %rax \n\
-               movq $0, %rdx \n\
+               cqto \n\
                idivq %rsi \n\
                pushq %rax \n",
             b1 ^ b2,
@@ -69,9 +69,8 @@ let _ =
           ( (a1 ^ a2)
             ^ "popq %rsi \n\
                popq %rax \n\
-               movq $0xffffffffffffffff, %rdx \n\ 
+               cqto \n\
                idivq %rsi \n\
-               addq %rsi, %rdx \n\
                pushq %rdx \n",
             b1 ^ b2,
             nbf1 )
