@@ -22,4 +22,4 @@ rule token = parse
 | '('            { LPAREN }
 | ')'            { RPAREN }
 | _              { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
-| eof            { raise Eof }
+| eof            { EOF }

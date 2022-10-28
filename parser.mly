@@ -1,5 +1,5 @@
 %token LPAREN RPAREN
-%token EOL
+%token EOL EOF
 %token <int> INT
 %token <float> FLOAT
 %token TOINT TOFLOAT PLUS PLUSF MINUS MINUSF TIMES TIMESF DIV MOD
@@ -9,24 +9,30 @@
 %type <Asyntax.sexp> parse
 %%
 parse:  
-  bob EOL  { $1 }
+  bob EOF  { $1 }
 ;
+
 bob:
+  expr EOF { $1 }
+| expr EOL { $1 } 
+;
+
+expr:
   INT  { Asyntax.Atom(Int($1))}
 | FLOAT { Asyntax.Atom(Float($1))}
-| TOFLOAT LPAREN bob RPAREN { Asyntax.Unaire (Tofloat,$3) }
-| TOINT LPAREN bob RPAREN { Asyntax.Unaire (Toint,$3) }
-| LPAREN bob RPAREN { $2 }
-| bob PLUS bob { Asyntax.Cons (Plus,$1,$3) }
-| bob PLUSF bob { Asyntax.Cons (Plusf,$1,$3) }
-| bob MINUS bob { Asyntax.Cons (Moins,$1,$3) }
-| bob MINUSF bob { Asyntax.Cons (Moinsf,$1,$3) }
-| bob TIMES bob { Asyntax.Cons (Prod,$1,$3) }
-| bob TIMESF bob { Asyntax.Cons (Prodf,$1,$3) }
-| bob DIV bob { Asyntax.Cons (Div,$1,$3) }
-| bob MOD bob { Asyntax.Cons (Mod,$1,$3) }
-| MINUS LPAREN bob RPAREN { Asyntax.Unaire (Moinsu,$3) }
-| PLUS LPAREN bob RPAREN { $3 }
+| TOFLOAT LPAREN expr RPAREN { Asyntax.Unaire (Tofloat,$3) }
+| TOINT LPAREN expr RPAREN { Asyntax.Unaire (Toint,$3) }
+| LPAREN expr RPAREN { $2 }
+| expr PLUS expr { Asyntax.Cons (Plus,$1,$3) }
+| expr PLUSF expr { Asyntax.Cons (Plusf,$1,$3) }
+| expr MINUS expr { Asyntax.Cons (Moins,$1,$3) }
+| expr MINUSF expr { Asyntax.Cons (Moinsf,$1,$3) }
+| expr TIMES expr { Asyntax.Cons (Prod,$1,$3) }
+| expr TIMESF expr { Asyntax.Cons (Prodf,$1,$3) }
+| expr DIV expr { Asyntax.Cons (Div,$1,$3) }
+| expr MOD expr { Asyntax.Cons (Mod,$1,$3) }
+| MINUS LPAREN expr RPAREN { Asyntax.Unaire (Moinsu,$3) }
+| PLUS LPAREN expr RPAREN { $3 }
 | MINUS INT { Asyntax.Unaire (Moinsu,Asyntax.Atom(Int($2))) }
 | MINUS FLOAT { Asyntax.Unaire (Moinsu,Asyntax.Atom(Float($2))) }
 | MINUS LPAREN bob RPAREN { Asyntax.Unaire (Moinsu,$3) }
