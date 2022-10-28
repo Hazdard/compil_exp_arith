@@ -2,9 +2,6 @@ open Asyntax
 open Lexer
 open Parser
 
-(* CORRIGER LES IDIVQ NEGATIFS 0xffffffffffffffff dans rdx si strictement negatif et 0 sinon*)
-(*jne : not equal ; jz : equal zero ; jnz : not equal zero *)
-
 let write_in file str =
   let out_channel = open_out file in
   output_string out_channel str
@@ -55,23 +52,15 @@ let _ =
       | Asyntax.Cons (Div, s1, s2) ->
           let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
-          ( (a1 ^ a2) (*corr_div : si la value de %rax sauvee dans %rcx est negative, alors on ajoute 1*signe(%rsi) *)
-            ^ "popq %rsi \n\
-               popq %rax \n\
-               cqto \n\
-               idivq %rsi \n\
-               pushq %rax \n",
+          ( (a1 ^ a2)
+            ^ "popq %rsi \npopq %rax \ncqto \nidivq %rsi \npushq %rax \n",
             b1 ^ b2,
             nbf2 )
-      | Asyntax.Cons (Mod, s1, s2) ->
+      | Asyntax.Cons (Mod, s1, s2) -> (* si de signes differents, il faut ajouter le diviseur au reste *)
           let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
           ( (a1 ^ a2)
-            ^ "popq %rsi \n\
-               popq %rax \n\
-               cqto \n\
-               idivq %rsi \n\
-               pushq %rdx \n",
+            ^ "popq %rsi \npopq %rax \ncqto \nidivq %rsi \npushq %rdx \n",
             b1 ^ b2,
             nbf1 )
       | Asyntax.Atom (Int ent) ->
