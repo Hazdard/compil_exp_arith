@@ -18,8 +18,69 @@ type sexp =
   | Atom of feuille
   | Cons of noeud_bin * sexp * sexp
   | Unaire of noeud_una * sexp
+  | Vardef of string * int * sexp * sexp
 
-let rec afficher_sexp = function
+let bien_typee ast =
+  let rec aux = function
+    (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
+    | Atom (Int _) -> (true, 1)
+    | Atom (Float _) -> (true, 0)
+    | Vardef (_, ent, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, _ = aux s2 in
+        (a1 && a2 && ent = b1, ent)
+    | Unaire (Toint, s1) ->
+        let a, b = aux s1 in
+        (a && b = 0, 1)
+    | Unaire (Tofloat, s1) ->
+        let a, b = aux s1 in
+        (a && b = 1, 0)
+    | Unaire (Moinsu, s1) ->
+        let a, b = aux s1 in
+        (a, b)
+    | Unaire (Fact, s) ->
+        let a, b = aux s in
+        (a && b = 1, b)
+    | Cons (Plus, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+    | Cons (Plusf, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 0, b1)
+    | Cons (Prod, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+    | Cons (Power, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+    | Cons (Prodf, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 0, b1)
+    | Cons (Moins, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+    | Cons (Moinsf, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 0, b1)
+    | Cons (Mod, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+    | Cons (Div, s1, s2) ->
+        let a1, b1 = aux s1 in
+        let a2, b2 = aux s2 in
+        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
+  in
+  aux ast
+  
+  let rec afficher_sexp = function
   | Unaire (Toint, exp) ->
       print_string " Toint (";
       afficher_sexp exp;
@@ -107,59 +168,3 @@ let rec afficher_sexp = function
       print_string " , ";
       afficher_sexp s2;
       print_char ')'
-
-let bien_typee ast =
-  let rec aux = function
-    (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
-    | Atom (Int _) -> (true, 1)
-    | Atom (Float _) -> (true, 0)
-    | Unaire (Toint, s1) ->
-        let a, b = aux s1 in
-        (a && b = 0, 1)
-    | Unaire (Tofloat, s1) ->
-        let a, b = aux s1 in
-        (a && b = 1, 0)
-    | Unaire (Moinsu, s1) ->
-        let a, b = aux s1 in
-        (a, b)
-    | Unaire (Fact, s) ->
-        let a, b = aux s in
-        (a && b = 1, b)
-    | Cons (Plus, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
-    | Cons (Plusf, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 0, b1)
-    | Cons (Prod, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
-    | Cons (Power, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
-    | Cons (Prodf, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 0, b1)
-    | Cons (Moins, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
-    | Cons (Moinsf, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 0, b1)
-    | Cons (Mod, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
-    | Cons (Div, s1, s2) ->
-        let a1, b1 = aux s1 in
-        let a2, b2 = aux s2 in
-        ((a1 && a2) && b1 = b2 && b1 = 1, b1)
-  in
-  aux ast

@@ -3,6 +3,7 @@ open Lexer
 open Parser
 
 (* FAIRE UN DOSSIER TEST ; Probleme : corriger la div ; Detailler implementation puissance et fact *)
+(* rajouter la gestion des variables dans le calcul des exp*)
 
 let write_in file str =
   let out_channel = open_out file in

@@ -1,6 +1,5 @@
 {
-  open Parser        
-  exception Eof
+  open Parser
   exception SyntaxError of string
 }
 
@@ -11,6 +10,7 @@ rule token = parse
 |['0'-'9']+ '.' ['0'-'9']+ as lxm { FLOAT(float_of_string lxm) }
 |"float"         {TOFLOAT}
 |"int"           {TOINT}
+|['A'-'z']+ as nom_var { NAME(nom_var) }  
 | "+."           { PLUSF }
 | '+'            { PLUS }
 | "-."           { MINUSF }
@@ -21,6 +21,7 @@ rule token = parse
 | '%'            { MOD }
 | '!'            { FACT }
 | '^'            { POWER }
+| '='            { EQUAL }
 | '('            { LPAREN }
 | ')'            { RPAREN }
 | _              { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
