@@ -2,9 +2,10 @@
 %token EOL EOF
 %token <int> INT
 %token <float> FLOAT
-%token TOINT TOFLOAT PLUS PLUSF MINUS MINUSF TIMES TIMESF DIV MOD
+%token TOINT TOFLOAT PLUS PLUSF MINUS MINUSF TIMES TIMESF DIV MOD FACT
 %left PLUS PLUSF MINUS MINUSF      
-%left TIMES TIMESF DIV MOD      
+%left TIMES TIMESF DIV MOD 
+%nonassoc FACT     
 %start parse
 %type <Asyntax.sexp> parse
 %%
@@ -20,6 +21,7 @@ bob:
 expr:
   INT  { Asyntax.Atom(Int($1))}
 | FLOAT { Asyntax.Atom(Float($1))}
+| expr FACT { Asyntax.Unaire(Fact,$1)}
 | TOFLOAT LPAREN expr RPAREN { Asyntax.Unaire (Tofloat,$3) }
 | TOINT LPAREN expr RPAREN { Asyntax.Unaire (Toint,$3) }
 | LPAREN expr RPAREN { $2 }

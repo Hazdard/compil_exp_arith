@@ -1,7 +1,7 @@
 exception Error of string
 
 type noeud_bin = Plus | Moins | Prod | Plusf | Moinsf | Prodf | Div | Mod
-type noeud_una = Toint | Tofloat | Moinsu
+type noeud_una = Toint | Tofloat | Moinsu | Fact
 type feuille = Int of int | Float of float
 
 type sexp =
@@ -22,6 +22,10 @@ let rec afficher_sexp = function
       print_string " Tofloat (";
       afficher_sexp exp;
       print_char ')'
+  | Unaire (Fact, exp) ->
+      print_char  '(';
+      afficher_sexp exp;
+      print_string " ! ) "
   | Atom (Int ent) ->
       print_string " Atom (";
       print_int ent;
@@ -100,7 +104,10 @@ let bien_typee ast =
         (a && b = 1, 0)
     | Unaire (Moinsu, s1) ->
         let a, b = aux s1 in
-        (a,b)
+        (a, b)
+    | Unaire (Fact, s) ->
+        let a, b = aux s in
+        (a&&(b=1), b)
     | Cons (Plus, s1, s2) ->
         let a1, b1 = aux s1 in
         let a2, b2 = aux s2 in

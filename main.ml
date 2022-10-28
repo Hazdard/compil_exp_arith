@@ -2,6 +2,8 @@ open Asyntax
 open Lexer
 open Parser
 
+(* Probleme : corriger la div ; Detailler implementation puissance et fact *)
+
 let write_in file str =
   let out_channel = open_out file in
   output_string out_channel str
@@ -36,6 +38,11 @@ let _ =
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \naddq %rdi, %rsi \npushq %rsi \n",
             b1 ^ b2,
             nbf2 )
+      | Asyntax.Unaire (Fact, s) ->
+          let a, b, nbf = aux (s, compteur) in
+          ( a ^ "popq %rdi \nmovq $1, %rsi \ncall factorielle \npushq %rax \n",
+            b,
+            nbf )
       | Asyntax.Cons (Moins, s1, s2) ->
           let a1, b1, nbf1 = aux (s1, compteur) in
           let a2, b2, nbf2 = aux (s2, nbf1) in
@@ -142,6 +149,51 @@ let _ =
             b,
             nbf )
     in
+    let data =
+      "\n\
+      \ \n\
+       print_float : \n\
+       movq %rsp, %rbp \n\
+       movq %rdi, %xmm0 \n\
+       movl $convfloat, %edi \n\
+       movl $1, %eax \n\
+       call printf \n\
+      \ \n\
+       modulo : \n\
+       movq %rdi, %rax \n\
+       cqto \n\
+       idivq %rsi \n\
+       imulq %rsi, %rdi \n\
+       movq $0, %rcx \n\
+       cmp %rdi, %rcx \n\
+       js rien \n\
+       addq %rsi, %rdx \n\
+       movq %rdx, %rax \n\
+       ret \n\
+      \ \n\
+       rien : \n\
+      \ \n\
+       movq %rdx, %rax \n\
+       ret \n\
+       factorielle : \n\
+       movq $2, %rcx \n\
+       movq %rdi, %rdx \n\
+       cmp %rcx, %rdx \n\
+       js retour \n\
+       imulq %rdi, %rsi \n\
+       addq $-1, %rdi \n\
+       jmp factorielle \n\
+      \ \n\
+       retour: \n\
+       movq %rsi, %rax \n\
+       ret \n\
+      \ \n\
+       .data \n\
+       message :\n\
+       .string \"%d \\n\" \n\
+       convfloat : \n\
+       .string \"%g \\n\"\n"
+    in
     let code, var, _ = aux (ast, 0) in
     write_in
       (nom Sys.argv.(1))
@@ -155,27 +207,7 @@ let _ =
          \ \n\
           .F0: \n\
           .double -1.0")
-       ^ var
-       ^ "\n\
-         \ \n\
-          modulo : \n\
-          movq %rdi, %rax \n\
-          cqto \n\
-          idivq %rsi \n\
-          imulq %rsi, %rdi \n\
-          movq $0, %rcx \n\
-          cmp %rdi, %rcx \n\
-          js rien \n\
-          addq %rsi, %rdx \n\
-          movq %rdx, %rax \n\
-          ret \n\
-         \ \n\
-          rien : \n\
-          movq %rdx, %rax \n\
-          ret \n\
-          .data \n\
-          message: \n\
-          .string \"%d \\n\" \n"
+       ^ var ^ data
       else
         (".global main \n \nmain : \n" ^ code)
         ^ "movq (%rsp), %xmm0 \n\
@@ -186,31 +218,4 @@ let _ =
            ret \n\
           \ \n\
            .F0: \n\
-           .double -1.0" ^ var
-        ^ "\n\
-          \ \n\
-           print_float : \n\
-           movq %rsp, %rbp \n\
-           movq %rdi, %xmm0 \n\
-           movl $convfloat, %edi \n\
-           movl $1, %eax \n\
-           call printf \n\
-          \ \n\
-           modulo : \n\
-           movq %rdi, %rax \n\
-           cqto \n\
-           idivq %rsi \n\
-           imulq %rsi, %rdi \n\
-           movq $0, %rcx \n\
-           cmp %rdi, %rcx \n\
-           js rien \n\
-           addq %rsi, %rdx \n\
-           movq %rdx, %rax \n\
-           ret \n\
-          \ \n\
-           rien : \n\
-           movq %rdx, %rax \n\
-           ret \n\
-           .data \n\
-           convfloat : \n\
-           .string \"%g \\n\"\n")
+           .double -1.0" ^ var ^ data)

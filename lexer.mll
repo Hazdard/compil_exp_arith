@@ -19,6 +19,7 @@ rule token = parse
 | '*'            { TIMES }
 | '/'            { DIV }
 | '%'            { MOD }
+| '!'            { FACT }
 | '('            { LPAREN }
 | ')'            { RPAREN }
 | _              { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
