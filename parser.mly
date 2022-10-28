@@ -1,6 +1,6 @@
-%token <string> NAME
 %token LPAREN RPAREN EQUAL
 %token EOL EOF
+%token <string> NAME
 %token <int> INT
 %token <float> FLOAT
 %token TOINT TOFLOAT PLUS PLUSF MINUS MINUSF TIMES TIMESF DIV MOD FACT POWER
@@ -20,6 +20,7 @@ parse :
 | expr_float EOF { $1 }
 ;
 
+
 expr_int:
   INT  { Asyntax.Atom(Int($1))}
 | PLUS INT { Asyntax.Atom(Int($2)) }
@@ -35,7 +36,6 @@ expr_int:
 | expr_int MOD expr_int { Asyntax.Cons (Mod,$1,$3) }
 | MINUS LPAREN expr_int RPAREN { Asyntax.Unaire (Moinsu,$3) }
 | PLUS LPAREN expr_int RPAREN { $3 }
-| MINUS LPAREN expr_int RPAREN { Asyntax.Unaire (Moinsu,$3) }
 ;
 
 expr_float:
