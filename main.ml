@@ -208,6 +208,24 @@ let _ =
                push %rdi \n",
             b,
             nbf )
+      | Retour (s1, s2) when snd (bien_typee s1) = 1 ->
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
+          ( (a1 ^ "popq %rsi \nmovq $message, %rdi \nmovq $0, %rax \ncall printf \n") ^ a2,
+            b1 ^ b2,
+            nbf2 )
+      | Retour (s1, s2) ->
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
+          ( (a1
+           ^ "movq (%rsp), %xmm0 \n\
+              movq $1, %rax \n\
+              addq $8, %rsp\n\
+              movq %xmm0, %rdi \n\
+              call print_float \n")
+            ^ a2,
+            b1 ^ b2,
+            nbf2 )
     in
     let data =
       "\n\

@@ -14,10 +14,14 @@
 parse :
   NAME EQUAL expr_int EOL parse {Asyntax.Vardef($1,1,$3,$5)}
 | NAME EQUAL expr_float EOL parse {Asyntax.Vardef($1,0,$3,$5)}
-| expr_int EOL { $1 }
-| expr_float EOL { $1 }
-| expr_int EOF { $1 }
-| expr_float EOF { $1 }
+| calcul EOL parse {Asyntax.Retour($1,$3)}
+| calcul EOL {$1}
+| calcul EOF {$1}
+;
+
+calcul :
+  expr_int { $1 }
+| expr_float { $1 }
 ;
 
 

@@ -19,6 +19,7 @@ type sexp =
   | Cons of noeud_bin * sexp * sexp
   | Unaire of noeud_una * sexp
   | Vardef of string * int * sexp * sexp
+  | Retour of sexp * sexp
 
 let rec appart x l =
   match l with
@@ -48,6 +49,7 @@ let attrib_var ast =
     | Atom a -> Atom a
     | Cons (op, s1, s2) -> Cons (op, aux s1 liste, aux s2 liste)
     | Unaire (op, s) -> Unaire (op, aux s liste)
+    | Retour (sretour, suite) -> Retour (aux sretour liste, aux suite liste)
   in
   aux ast []
 
@@ -60,6 +62,10 @@ let rec numero x l =
 let bien_typee ast =
   let rec aux = function
     (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
+    | Retour (sretour, suite) ->
+        let aret, bret = aux sretour in
+        let asuite, bsuite = aux suite in
+        (aret && asuite, bret)
     | Atom (Int _) -> (true, 1)
     | Atom (Float _) -> (true, 0)
     | Vardef (_, valtype, s1, s2) ->
@@ -119,6 +125,10 @@ let bien_typee ast =
   aux ast
 
 let rec afficher_sexp = function
+  | Retour (s1, s2) ->
+      afficher_sexp s1;
+      print_string " \n";
+      afficher_sexp s2
   | Unaire (Toint, exp) ->
       print_string " Toint (";
       afficher_sexp exp;
