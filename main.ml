@@ -29,6 +29,7 @@ let _ =
       (*Invariant : a la fin d'un appel, le resultat est seul dans la pile et la tete de la pile est au debut du resultat *)
       (*F0 est attribue a -1.0*)
       (*aux retourne (code qui calcule, code qui defini les flottants, indice du dernier flottant)*)
+      | Vide -> ("", "", compteur)
       | Vardef (nom, valtype, sdef, suite) ->
           let adef, bdef, nbfdef = aux (sdef, compteur, lvar) in
           let dejavu, numero = Asyntax.appart nom lvar in
@@ -36,7 +37,7 @@ let _ =
           let ainter, binter, newlvar, newcompteur =
             if dejavu then
               if valtype = 1 then
-                ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int numero)
+                ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int (numero-1))
                   ^ "(%rip) \n",
                   bdef,
                   lvar,
@@ -44,7 +45,7 @@ let _ =
               else
                 ( ((adef ^ "movq (%rsp), %xmm0 \naddq $8, %rsp \nmovsd %xmm0, .X"
                    )
-                  ^ string_of_int numero)
+                  ^ string_of_int (numero-1))
                   ^ "(%rip) \n",
                   bdef,
                   lvar,
@@ -293,24 +294,8 @@ let _ =
     write_in
       (nom Sys.argv.(1))
       (if est_entier = 1 then
-       ((".global main \n \nmain : \n" ^ code)
-       ^ "movq $message, %rdi \n\
-          popq %rsi \n\
-          movq $0, %rax \n\
-          call printf \n\
-          ret \n\
-         \ \n\
-          .F0: \n\
-          .double -1.0 \n")
+       ((".global main \n \nmain : \n" ^ code) ^ "ret \n \n.F0: \n.double -1.0 \n")
        ^ data ^ var
       else
         (".global main \n \nmain : \n" ^ code)
-        ^ "movq (%rsp), %xmm0 \n\
-           movq $1, %rax \n\
-           addq $8, %rsp\n\
-           movq %xmm0, %rdi \n\
-           call print_float \n\
-           ret \n\
-          \ \n\
-           .F0: \n\
-           .double -1.0" ^ data ^ var)
+        ^ "ret \n \n.F0: \n.double -1.0" ^ data ^ var)

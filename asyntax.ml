@@ -15,6 +15,7 @@ type noeud_una = Toint | Tofloat | Moinsu | Fact
 type feuille = Int of int | Float of float | Var of string * int
 
 type sexp =
+  | Vide
   | Atom of feuille
   | Cons of noeud_bin * sexp * sexp
   | Unaire of noeud_una * sexp
@@ -50,6 +51,7 @@ let attrib_var ast =
     | Cons (op, s1, s2) -> Cons (op, aux s1 liste, aux s2 liste)
     | Unaire (op, s) -> Unaire (op, aux s liste)
     | Retour (sretour, suite) -> Retour (aux sretour liste, aux suite liste)
+    | Vide -> Vide
   in
   aux ast []
 
@@ -62,6 +64,7 @@ let rec numero x l =
 let bien_typee ast =
   let rec aux = function
     (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
+    | Vide -> (true, -1)
     | Retour (sretour, suite) ->
         let aret, bret = aux sretour in
         let asuite, bsuite = aux suite in
@@ -125,6 +128,7 @@ let bien_typee ast =
   aux ast
 
 let rec afficher_sexp = function
+  | Vide -> ()
   | Retour (s1, s2) ->
       afficher_sexp s1;
       print_string " \n";
