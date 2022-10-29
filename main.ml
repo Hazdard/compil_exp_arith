@@ -3,7 +3,6 @@ open Lexer
 open Parser
 
 (* FAIRE UN DOSSIER TEST ; Probleme : corriger la div ; Detailler implementation puissance et fact *)
-(* rajouter la gestion des variables dans le calcul des exp*)
 
 let write_in file str =
   let out_channel = open_out file in
@@ -18,48 +17,90 @@ let nom str =
 let _ =
   let lexbuf = Lexing.from_channel (open_in Sys.argv.(1)) in
   (* Mettre stdin pour lire directement le texte ecrit dans la console *)
-  let ast = Parser.parse Lexer.token lexbuf in
+  let ast_nontypee = Parser.parse Lexer.token lexbuf in
+  let ast = Asyntax.attrib_var ast_nontypee in
   let check, est_entier = Asyntax.bien_typee ast in
   if not check then failwith "Erreur de typage"
     (* else Asyntax.afficher_sexp ast; print_string "\n" *)
   else
-    let rec aux (ast, compteur) =
+    let rec aux (ast, compteur, lvar) =
       match ast with
       (*Invariant : a la fin d'un appel, le resultat est seul dans la pile et la tete de la pile est au debut du resultat *)
       (*F0 est attribue a -1.0*)
       (*aux retourne (code qui calcule, code qui defini les flottants, indice du dernier flottant)*)
+      | Vardef (nom, valtype, sdef, suite) ->
+          let adef, bdef, nbfdef = aux (sdef, compteur, lvar) in
+          let dejavu, numero = Asyntax.appart nom lvar in
+          let n = List.length lvar in
+          let ainter, binter, newlvar =
+            if dejavu then
+              if valtype = 1 then
+                ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int numero)
+                  ^ "(%rip) \n",
+                  bdef,
+                  lvar )
+              else
+                ( ((adef ^ "movsd %rsp, .X") ^ string_of_int numero)
+                  ^ "(%rip) \n",
+                  bdef,
+                  lvar ) (* va possiblement trop vite *)
+            else if valtype = 1 then
+              ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int n)
+                ^ "(%rip) \n",
+                ((bdef ^ ".X") ^ string_of_int n) ^ ": \n.int 42 \n",
+                (nom, valtype) :: lvar )
+            else
+              ( ((adef ^ "movsd %rsp, .X") ^ string_of_int n)
+                ^ "(%rip) \naddq $8, %rsp",
+                ((bdef ^ ".X") ^ string_of_int n)
+                ^ ": \n.double 0.31415926535 \n",
+                (nom, valtype) :: lvar )
+          in
+          let asuite, bsuite, nbfsuite = aux (suite, compteur, newlvar) in
+          (ainter ^ asuite, binter ^ bsuite, nbfsuite)
+      | Atom (Var (nom, vartype)) ->
+          if vartype = 1 then
+            ( ("movq .X" ^ string_of_int (Asyntax.numero nom lvar))
+              ^ "(%rip), %rdi \npushq %rdi \n",
+              "",
+              compteur )
+          else
+            ( ("movsd .X" ^ string_of_int (Asyntax.numero nom lvar))
+              ^ "(%rip), %xmm0 \nmovsd %xmm0, %-8(%rsp) \n subq $-8, %rsp \n",
+              "",
+              compteur )
       | Asyntax.Unaire (Moinsu, s) when snd (Asyntax.bien_typee s) = 1 ->
-          let a, b, nbf = aux (s, compteur) in
+          let a, b, nbf = aux (s, compteur, lvar) in
           ( a ^ "popq %rdi \nmovq $0, %rsi \nsubq %rdi, %rsi \npushq %rsi \n",
             b,
             nbf )
       | Asyntax.Cons (Plus, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \naddq %rdi, %rsi \npushq %rsi \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Unaire (Fact, s) ->
-          let a, b, nbf = aux (s, compteur) in
+          let a, b, nbf = aux (s, compteur, lvar) in
           ( a ^ "popq %rdi \nmovq $1, %rsi \ncall factorielle \npushq %rax \n",
             b,
             nbf )
       | Asyntax.Cons (Moins, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \nsubq %rsi, %rdi \npushq %rdi \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Prod, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2)
             ^ "popq %rsi \npopq %rdi \nimulq %rdi, %rsi \npushq %rsi \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Power, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2)
             ^ "popq %rsi \n\
                popq %rdi \n\
@@ -69,16 +110,16 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Div, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2)
             ^ "popq %rsi \npopq %rax \ncqto \nidivq %rsi \npushq %rax \n",
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Mod, s1, s2) ->
           (* si de signes differents, il faut ajouter le diviseur au reste *)
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \ncall modulo \npushq %rax \n",
             b1 ^ b2,
             nbf1 )
@@ -92,7 +133,7 @@ let _ =
             ^ string_of_float flott,
             compteur + 1 )
       | Asyntax.Unaire (Moinsu, s) ->
-          let a, b, c = aux (s, compteur) in
+          let a, b, c = aux (s, compteur, lvar) in
           ( a
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -104,8 +145,8 @@ let _ =
             b,
             c )
       | Asyntax.Cons (Plusf, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2)
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -117,8 +158,8 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Moinsf, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2)
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -130,8 +171,8 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Prodf, s1, s2) ->
-          let a1, b1, nbf1 = aux (s1, compteur) in
-          let a2, b2, nbf2 = aux (s2, nbf1) in
+          let a1, b1, nbf1 = aux (s1, compteur, lvar) in
+          let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2)
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -143,7 +184,7 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Unaire (Tofloat, s) ->
-          let a, b, nbf = aux (s, compteur) in
+          let a, b, nbf = aux (s, compteur, lvar) in
           ( a
             ^ "popq %rdi \n\
                cvtsi2sdq %rdi, %xmm0 \n\
@@ -152,7 +193,7 @@ let _ =
             b,
             nbf )
       | Asyntax.Unaire (Toint, s) ->
-          let a, b, nbf = aux (s, compteur) in
+          let a, b, nbf = aux (s, compteur, lvar) in
           ( a
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
@@ -219,7 +260,7 @@ let _ =
        convfloat : \n\
        .string \"%g \\n\"\n"
     in
-    let code, var, _ = aux (ast, 0) in
+    let code, var, _ = aux (ast, 0, []) in
     write_in
       (nom Sys.argv.(1))
       (if est_entier = 1 then
@@ -231,8 +272,8 @@ let _ =
           ret \n\
          \ \n\
           .F0: \n\
-          .double -1.0")
-       ^ var ^ data
+          .double -1.0 \n")
+       ^ data ^ var
       else
         (".global main \n \nmain : \n" ^ code)
         ^ "movq (%rsp), %xmm0 \n\
@@ -243,4 +284,4 @@ let _ =
            ret \n\
           \ \n\
            .F0: \n\
-           .double -1.0" ^ var ^ data)
+           .double -1.0" ^ data ^ data)

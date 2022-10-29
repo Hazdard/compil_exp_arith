@@ -12,7 +12,7 @@ type noeud_bin =
   | Power
 
 type noeud_una = Toint | Tofloat | Moinsu | Fact
-type feuille = Int of int | Float of float
+type feuille = Int of int | Float of float | Var of string * int
 
 type sexp =
   | Atom of feuille
@@ -20,15 +20,52 @@ type sexp =
   | Unaire of noeud_una * sexp
   | Vardef of string * int * sexp * sexp
 
+let rec appart x l =
+  match l with
+  | [] -> (false, -1)
+  | a :: q when fst a = x -> (true, snd a)
+  | _ :: q -> appart x q
+
+let rec modif l cpl =
+  match l with
+  | [] -> []
+  | a :: q when fst cpl = fst a -> cpl :: q
+  | a :: q -> a :: modif q cpl
+
+let attrib_var ast =
+  let rec aux ast liste =
+    match ast with
+    | Vardef (nom, valtype, sdef, suite) when not (fst (appart nom liste)) ->
+        Vardef
+          (nom, valtype, aux sdef liste, aux suite ((nom, valtype) :: liste))
+    | Vardef (nom, valtype, sdef, suite) ->
+        Vardef
+          (nom, valtype, aux sdef liste, aux suite (modif liste (nom, valtype)))
+    | Atom (Var (nom, valtype)) when fst (appart nom liste) ->
+        let newvaltype = snd (appart nom liste) in
+        Atom (Var (nom, newvaltype))
+    | Atom (Var (nom, valtype)) -> failwith "Variable non definie"
+    | Atom a -> Atom a
+    | Cons (op, s1, s2) -> Cons (op, aux s1 liste, aux s2 liste)
+    | Unaire (op, s) -> Unaire (op, aux s liste)
+  in
+  aux ast []
+
+let rec numero x l = match l with
+  |[] -> failwith("Pas dans la liste donc pas de numero")
+  |a::q when fst a = x -> 0
+  |_::q -> 1+ (numero x q)
+
 let bien_typee ast =
   let rec aux = function
     (* La deuxieme composante vaut 1 si l'ast a un type entier et 0 si il a le type flottant *)
     | Atom (Int _) -> (true, 1)
     | Atom (Float _) -> (true, 0)
-    | Vardef (_, ent, s1, s2) ->
+    | Vardef (_, valtype, s1, s2) ->
         let a1, b1 = aux s1 in
         let a2, _ = aux s2 in
-        (a1 && a2 && ent = b1, ent)
+        (a1 && a2 && valtype = b1, valtype)
+    | Atom (Var (nom, valtype)) -> (true, valtype)
     | Unaire (Toint, s1) ->
         let a, b = aux s1 in
         (a && b = 0, 1)
@@ -79,8 +116,8 @@ let bien_typee ast =
         ((a1 && a2) && b1 = b2 && b1 = 1, b1)
   in
   aux ast
-  
-  let rec afficher_sexp = function
+
+let rec afficher_sexp = function
   | Unaire (Toint, exp) ->
       print_string " Toint (";
       afficher_sexp exp;
@@ -97,10 +134,23 @@ let bien_typee ast =
       print_char '(';
       afficher_sexp exp;
       print_string " ! ) "
+  | Vardef (nom, valtype, s1, s2) ->
+      print_string (nom ^ " de type : ");
+      print_int valtype;
+      print_string " , vaut : ";
+      afficher_sexp s1;
+      print_string "\n";
+      afficher_sexp s2
   | Atom (Int ent) ->
       print_string " Atom (";
       print_int ent;
       print_char ')'
+  | Atom (Var (nom, valtype)) ->
+      print_string "( ";
+      print_string nom;
+      print_string " , ";
+      print_int valtype;
+      print_string " )"
   | Atom (Float flott) ->
       print_string " Atom (";
       print_float flott;
