@@ -32,12 +32,14 @@ let _ =
       | Vide -> ("", "", compteur)
       | Vardef (nom, valtype, sdef, suite) ->
           let adef, bdef, nbfdef = aux (sdef, compteur, lvar) in
-          let dejavu, numero = Asyntax.appart nom lvar in
+          let dejavu, _ = Asyntax.appart nom lvar in
           let n = List.length lvar in
           let ainter, binter, newlvar, newcompteur =
             if dejavu then
+              let numerovar = (Asyntax.numero nom (List.rev lvar)) in
               if valtype = 1 then
-                ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int (numero-1))
+                ( ((adef ^ "popq %rdi \nmovq %rdi, .X")
+                  ^ string_of_int numerovar)
                   ^ "(%rip) \n",
                   bdef,
                   lvar,
@@ -45,7 +47,7 @@ let _ =
               else
                 ( ((adef ^ "movq (%rsp), %xmm0 \naddq $8, %rsp \nmovsd %xmm0, .X"
                    )
-                  ^ string_of_int (numero-1))
+                  ^ string_of_int numerovar)
                   ^ "(%rip) \n",
                   bdef,
                   lvar,
@@ -294,7 +296,8 @@ let _ =
     write_in
       (nom Sys.argv.(1))
       (if est_entier = 1 then
-       ((".global main \n \nmain : \n" ^ code) ^ "ret \n \n.F0: \n.double -1.0 \n")
+       ((".global main \n \nmain : \n" ^ code)
+       ^ "ret \n \n.F0: \n.double -1.0 \n")
        ^ data ^ var
       else
         (".global main \n \nmain : \n" ^ code)
