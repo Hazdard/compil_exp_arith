@@ -26,8 +26,8 @@ expr_int:
 | PLUS INT { Asyntax.Atom(Int($2)) }
 | MINUS INT { Asyntax.Unaire (Moinsu,Asyntax.Atom(Int($2))) }
 | NAME  { Asyntax.Atom(Var($1,-1))}
-| PLUS NAME { Asyntax.Atom(Var($2,-1))}
-| MINUS NAME { Asyntax.Unaire (Moinsu,Asyntax.Atom(Var($2,-1))) }
+| PLUS LPAREN NAME RPAREN { Asyntax.Atom(Var($3,-1))}
+| MINUS LPAREN NAME RPAREN { Asyntax.Unaire (Moinsu,Asyntax.Atom(Var($3,-1))) }
 | expr_int FACT { Asyntax.Unaire(Fact,$1)}
 | expr_int POWER expr_int { Asyntax.Cons(Power,$1,$3)}
 | TOINT LPAREN expr_float RPAREN { Asyntax.Unaire (Toint,$3) }
@@ -46,8 +46,8 @@ expr_float:
 | PLUS FLOAT { Asyntax.Atom(Float($2)) }
 | MINUS FLOAT { Asyntax.Unaire (Moinsu,Asyntax.Atom(Float($2))) }
 | NAME  { Asyntax.Atom(Var($1,-1))}
-| PLUS NAME { Asyntax.Atom(Var($2,-1))}
-| MINUS NAME { Asyntax.Unaire (Moinsu,Asyntax.Atom(Var($2,-1))) }
+| PLUS LPAREN NAME RPAREN { Asyntax.Atom(Var($3,-1))}
+| MINUS LPAREN NAME RPAREN { Asyntax.Unaire (Moinsu,Asyntax.Atom(Var($3,-1))) }
 | expr_float PLUSF expr_float { Asyntax.Cons (Plusf,$1,$3) }
 | TOFLOAT LPAREN expr_int RPAREN { Asyntax.Unaire (Tofloat,$3) }
 | LPAREN expr_float RPAREN { $2 }

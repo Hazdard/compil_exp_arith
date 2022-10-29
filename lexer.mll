@@ -24,5 +24,5 @@ rule token = parse
 | '='            { EQUAL }
 | '('            { LPAREN }
 | ')'            { RPAREN }
-| _              { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
 | eof            { EOF }
+| _              { raise (SyntaxError ("Unexpected char: " ^ Lexing.lexeme lexbuf)) }
