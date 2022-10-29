@@ -33,7 +33,6 @@ expr_int:
 | PLUS LPAREN NAME RPAREN { Asyntax.Atom(Var($3,-1))}
 | MINUS LPAREN NAME RPAREN { Asyntax.Unaire (Moinsu,Asyntax.Atom(Var($3,-1))) }
 | expr_int FACT { Asyntax.Unaire(Fact,$1)}
-| expr_int POWER expr_int { Asyntax.Cons(Power,$1,$3)}
 | TOINT LPAREN expr_float RPAREN { Asyntax.Unaire (Toint,$3) }
 | LPAREN expr_int RPAREN { $2 }
 | expr_int PLUS expr_int { Asyntax.Cons (Plus,$1,$3) }
@@ -41,6 +40,7 @@ expr_int:
 | expr_int TIMES expr_int { Asyntax.Cons (Prod,$1,$3) }
 | expr_int DIV expr_int { Asyntax.Cons (Div,$1,$3) }
 | expr_int MOD expr_int { Asyntax.Cons (Mod,$1,$3) }
+| expr_int POWER expr_int { Asyntax.Cons(Power,$1,$3) }
 | MINUS LPAREN expr_int RPAREN { Asyntax.Unaire (Moinsu,$3) }
 | PLUS LPAREN expr_int RPAREN { $3 }
 ;
