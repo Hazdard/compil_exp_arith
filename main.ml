@@ -211,7 +211,10 @@ let _ =
       | Retour (s1, s2) when snd (bien_typee s1) = 1 ->
           let a1, b1, nbf1 = aux (s1, compteur, lvar) in
           let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
-          ( (a1 ^ "popq %rsi \nmovq $message, %rdi \nmovq $0, %rax \ncall printf \n") ^ a2,
+          ( (a1
+           ^ "popq %rsi \nmovq $message, %rdi \nmovq $0, %rax \ncall printf \n"
+            )
+            ^ a2,
             b1 ^ b2,
             nbf2 )
       | Retour (s1, s2) ->
