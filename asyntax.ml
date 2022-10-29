@@ -51,10 +51,11 @@ let attrib_var ast =
   in
   aux ast []
 
-let rec numero x l = match l with
-  |[] -> failwith("Pas dans la liste donc pas de numero")
-  |a::q when fst a = x -> 0
-  |_::q -> 1+ (numero x q)
+let rec numero x l =
+  match l with
+  | [] -> failwith "Pas dans la liste donc pas de numero"
+  | a :: q when fst a = x -> 0
+  | _ :: q -> 1 + numero x q
 
 let bien_typee ast =
   let rec aux = function
@@ -63,8 +64,8 @@ let bien_typee ast =
     | Atom (Float _) -> (true, 0)
     | Vardef (_, valtype, s1, s2) ->
         let a1, b1 = aux s1 in
-        let a2, _ = aux s2 in
-        (a1 && a2 && valtype = b1, valtype)
+        let a2, b2 = aux s2 in
+        (a1 && a2 && valtype = b1, b2)
     | Atom (Var (nom, valtype)) -> (true, valtype)
     | Unaire (Toint, s1) ->
         let a, b = aux s1 in
