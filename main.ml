@@ -55,7 +55,7 @@ let _ =
             else if valtype = 1 then
               ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int n)
                 ^ "(%rip) \n",
-                ((bdef ^ ".X") ^ string_of_int n) ^ ": \n.int 42 \n",
+                ((bdef ^ ".X") ^ string_of_int n) ^ ": \n.double 42 \n",
                 (nom, valtype) :: lvar,
                 compteur )
             else
