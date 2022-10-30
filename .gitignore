@@ -2,8 +2,9 @@
 *.cmi
 *.cmo
 *.s
-*.exp
+expression.exp
 expression
+exemples
 lexer.ml
 parser.mli
 parser.ml
