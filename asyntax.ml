@@ -23,18 +23,22 @@ type sexp =
   | Retour of sexp * sexp
 
 let rec appart x l =
+  (* permet de tester si une variable est deja definie, est renvoie en seconde composante le type de la variable : 1 pour entier, 0 pour flottant, -1 si inconnu *)
   match l with
   | [] -> (false, -1)
   | a :: q when fst a = x -> (true, snd a)
   | _ :: q -> appart x q
 
 let rec modif l cpl =
+  (* permet de mettre a jour le type d'une variable *)
   match l with
   | [] -> []
   | a :: q when fst cpl = fst a -> cpl :: q
   | a :: q -> a :: modif q cpl
 
 let attrib_var ast =
+  (* va parcourir l'ast en attribuant les types a chaque variable, et eventuellement le met a jour si il change*)
+  (*n'est utilise qu'a l'initialisation de l'arbre*)
   let rec aux ast liste =
     match ast with
     | Vardef (nom, valtype, sdef, suite) when not (fst (appart nom liste)) ->

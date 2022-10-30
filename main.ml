@@ -2,9 +2,6 @@ open Asyntax
 open Lexer
 open Parser
 
-(* FAIRE UN DOSSIER TEST ; Probleme : corriger la div ; Detailler implementation puissance et fact *)
-(* seg fault sur x=1.0 ; y=2.0 +. x ; x*)
-
 let write_in file str =
   let out_channel = open_out file in
   output_string out_channel str
@@ -19,16 +16,15 @@ let _ =
   let lexbuf = Lexing.from_channel (open_in Sys.argv.(1)) in
   (* Mettre stdin pour lire directement le texte ecrit dans la console *)
   let ast_nontypee = Parser.parse Lexer.token lexbuf in
-  let ast = Asyntax.attrib_var ast_nontypee in
+  let ast = Asyntax.attrib_var ast_nontypee in (* permet d'initialiser les types des variables *)
   let check, est_entier = Asyntax.bien_typee ast in
   if not check then failwith "Erreur de typage"
     (* else Asyntax.afficher_sexp ast; print_string "\n" *)
   else
     let rec aux (ast, compteur, lvar) =
       match ast with
+      (*aux retourne : (code qui calcule, code qui defini les flottants et variables, indice du dernier flottant)  *)
       (*Invariant : a la fin d'un appel, le resultat est seul dans la pile et la tete de la pile est au debut du resultat *)
-      (*F0 est attribue a -1.0*)
-      (*aux retourne (code qui calcule, code qui defini les flottants, indice du dernier flottant)*)
       | Vide -> ("", "", compteur)
       | Vardef (nom, valtype, sdef, suite) ->
           let adef, bdef, nbfdef = aux (sdef, compteur, lvar) in
@@ -36,8 +32,8 @@ let _ =
           let n = List.length lvar in
           let ainter, binter, newlvar, newcompteur =
             if dejavu then
-              let numerovar = (Asyntax.numero nom (List.rev lvar)) in
-              if valtype = 1 then
+              let numerovar = Asyntax.numero nom (List.rev lvar) in
+              if valtype = 1 then (* Si on a deja vu la variable, il faut aller modifier la valeur de sa constante associee dans le .data *)
                 ( ((adef ^ "popq %rdi \nmovq %rdi, .X")
                   ^ string_of_int numerovar)
                   ^ "(%rip) \n",
@@ -52,7 +48,7 @@ let _ =
                   bdef,
                   lvar,
                   compteur )
-            else if valtype = 1 then
+            else if valtype = 1 then (* Sinon, il faut lui creer une constante associee (cf rapport pour le choix du .double) *)
               ( ((adef ^ "popq %rdi \nmovq %rdi, .X") ^ string_of_int n)
                 ^ "(%rip) \n",
                 ((bdef ^ ".X") ^ string_of_int n) ^ ": \n.double 42 \n",
@@ -128,7 +124,6 @@ let _ =
             b1 ^ b2,
             nbf2 )
       | Asyntax.Cons (Mod, s1, s2) ->
-          (* si de signes differents, il faut ajouter le diviseur au reste *)
           let a1, b1, nbf1 = aux (s1, compteur, lvar) in
           let a2, b2, nbf2 = aux (s2, nbf1, lvar) in
           ( (a1 ^ a2) ^ "popq %rsi \npopq %rdi \ncall modulo \npushq %rax \n",
@@ -143,12 +138,13 @@ let _ =
             (("\n.F" ^ string_of_int (compteur + 1)) ^ ":\n.double ")
             ^ string_of_float flott ^ " \n",
             compteur + 1 )
-      | Asyntax.Unaire (Moinsu, s) ->
-          let a, b, c = aux (s, compteur, lvar) in
-          ( a
+      | Asyntax.Unaire (Moinsu, s) -> 
+          let a, b, c = aux (s, compteur, lvar) in 
+          (*F0 est attribue a -1.0 pour faciliter les changements de signe*)
+          ( a 
             ^ "movsd (%rsp), %xmm0 \n\
                addq $8, %rsp \n\
-               movsd .F0(%rip), %xmm1 \n\
+               movsd .F0(%rip), %xmm1 \n\ 
                mulsd %xmm1, %xmm0 \n\
                subq $8, %rsp \n\
                movq %xmm0, (%rsp) \n",
@@ -233,9 +229,8 @@ let _ =
             b1 ^ b2,
             nbf2 )
     in
-    let data =
+    let data = (* Fonctions implementes ou modifiees *)
       "\n\
-      \ \n\
        print_float : \n\
        movq %rsp, %rbp \n\
        movq %rdi, %xmm0 \n\
@@ -294,11 +289,10 @@ let _ =
     in
     let code, var, _ = aux (ast, 0, []) in
     write_in
-      (nom Sys.argv.(1))
+      (nom Sys.argv.(1)) 
       (if est_entier = 1 then
-       ((".global main \n \nmain : \n" ^ code)
-       ^ "ret \n \n.F0: \n.double -1.0 \n")
-       ^ data ^ var
+       ((".global main \n \nmain : \n" ^ code) ^ "ret \n ")
+       ^ data ^ "\n.F0: \n.double -1.0\n" ^ var
       else
         (".global main \n \nmain : \n" ^ code)
-        ^ "ret \n \n.F0: \n.double -1.0" ^ data ^ var)
+        ^ "ret \n" ^ data ^ "\n.F0: \n.double -1.0" ^ var)

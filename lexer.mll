@@ -20,7 +20,7 @@ rule token = parse
 | '/'            { DIV }
 | '%'            { MOD }
 | '!'            { FACT }
-| '#'            { POWER }
+| "**"           { POWER }
 | '='            { EQUAL }
 | '('            { LPAREN }
 | ')'            { RPAREN }
