@@ -285,7 +285,7 @@ let _ =
        message :\n\
        .string \"%d \\n\" \n\
        convfloat : \n\
-       .string \"%g \\n\"\n"
+       .string \"%f \\n\"\n"
     in
     let code, var, _ = aux (ast, 0, []) in
     write_in
